@@ -1,0 +1,94 @@
+﻿@page "/"
+@using ChangeFeedWebGame.Models
+@rendermode InteractiveServer
+@inject GameService gameService
+
+<PageTitle>Cosmic Dice Roll</PageTitle>
+
+<h1>Cosmic Dice Roll</h1>
+<br />
+
+<div class="d-flex" align="left">
+    <div class="pb-2 pt-4">
+        <p>Select User: </p>
+        <select @onchange="UpdateSelectedUser">
+            @foreach (string user in DummyUsers)
+            {
+                <option value="@user">@user</option>
+            }
+
+        </select>
+    </div>
+</div>
+<br />
+<br />
+
+<p role="status">Score: @CurrentScore</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="CreateNewGame">New game</button>
+
+
+@code {
+    // Inject NavigationManager
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnUserChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnScoreChanged { get; set; }
+
+    private string User = "";
+    private string GameId = "";
+    private int CurrentScore = 0;
+
+    private List<string> DummyUsers = new List<string> { "Justine", "Andrew", "Jay", "Kirill" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(User))
+            User = DummyUsers[0];
+
+        var changeEventArgs = new ChangeEventArgs { Value = User };
+        await UpdateSelectedUser(changeEventArgs);
+    }
+
+    private async Task UpdateSelectedUser(ChangeEventArgs e)
+    {
+        User = e.Value!.ToString();
+        await OnUserChanged.InvokeAsync(User);
+
+        var game = await gameService.GetMostRecentGame(User);
+        GameId = game.Id;
+        CurrentScore = game.Score;
+    }
+
+    private async void IncrementCount()
+    {
+        var game = await gameService.GetGame(GameId, User);
+        CurrentScore = await gameService.UpdateScore(game);
+
+        this.StateHasChanged();
+    }
+
+    private async void CreateNewGame()
+    {
+        string gameId = Guid.NewGuid().ToString();
+        Game game = new Game()
+            {
+                Id = gameId,
+                UserId = User,
+                Score = 0,
+                Clicks = 0
+            };
+        await gameService.CreateGame(game);
+
+        GameId = gameId;
+        CurrentScore = 0;
+
+        this.StateHasChanged();
+    }
+}

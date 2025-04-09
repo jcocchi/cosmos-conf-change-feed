@@ -1,0 +1,91 @@
+﻿@page "/gameHistory"
+@using ChangeFeedWebGame.Models
+@rendermode InteractiveServer
+@inject GameService gameService
+
+<PageTitle>Game History</PageTitle>
+
+<h1>Game History</h1>
+
+<p>View past games for a given user.</p>
+
+<br />
+
+<div class="d-flex" align="left">
+    <div class="pb-2 pt-4">
+        <p>Select User: </p>
+        <select @onchange="UpdateSelectedUser">
+            @foreach (string user in DummyUsers)
+            {
+                <option value="@user">@user</option>
+            }
+
+        </select>
+    </div>
+</div>
+<br />
+<br />
+
+@if(Games == null)
+{
+    <p>Loading Games...</p>
+} else {
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Game Id</th>
+                <th>Score</th>
+                <th>Clicks</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var game in Games)
+            {
+                <tr>
+                    <td>@game.Id</td>
+                    <td>@game.Score</td>
+                    <td>@game.Clicks</td>
+                    <td><button class="btn btn-primary" @onclick="(() => DeleteGame(game))">Delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnUserChanged { get; set; }
+
+    private string User = "";
+    private List<Game> Games;
+
+    private List<string> DummyUsers = new List<string> { "Justine", "Andrew", "Jay", "Kirill" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(User))
+            User = DummyUsers[0];
+
+        var changeEventArgs = new ChangeEventArgs { Value = User };
+        await UpdateSelectedUser(changeEventArgs);
+
+        Games = await gameService.GetAllGames(User);
+    }
+
+    private async Task UpdateSelectedUser(ChangeEventArgs e)
+    {
+        User = e.Value!.ToString();
+        await OnUserChanged.InvokeAsync(User);
+
+        var game = await gameService.GetMostRecentGame(User);
+        Games = await gameService.GetAllGames(User);
+    }
+
+    private async Task DeleteGame(Game game)
+    {
+        await gameService.DeleteGame(game.Id, game.UserId);
+
+        Games = await gameService.GetAllGames(User);
+    }
+}
