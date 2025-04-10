@@ -24,6 +24,9 @@
 <br />
 
 <p role="status">Score: @CurrentScore</p>
+<p role="alert">Achievement Unlocked: @Achievement</p>
+
+<br />
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 <button class="btn btn-primary" @onclick="CreateNewGame">New game</button>
@@ -43,6 +46,7 @@
     private string User = "";
     private string GameId = "";
     private int CurrentScore = 0;
+    private string Achievement = "";
 
     private List<string> DummyUsers = new List<string> { "Andrew", "Kirill", "Jay", "Marko", "Patty", "Justine" };
 
@@ -76,8 +80,31 @@
 
     private async void IncrementCount()
     {
+        Random random = new Random();
+        int randomScore = random.Next(1, 24);
+
+        string achievement = "";
+        if (randomScore == 2)
+        {
+            achievement = "Snake Eyes!";   
+        }
+        else if (randomScore == 7)
+        {
+            achievement = "Lucky Seven!";
+        }
+        else if (randomScore == 4 || randomScore == 6 || randomScore == 8 || randomScore == 10 || randomScore == 12)
+        {
+            achievement = "Double Trouble!";
+        }
+        else if (randomScore == 24)
+        {
+            achievement = "High Roller!";
+        }
+
         var game = await gameService.GetGame(GameId, User);
-        CurrentScore = await gameService.UpdateScore(game);
+
+        CurrentScore = await gameService.UpdateScore(game, randomScore, achievement);
+        Achievement = achievement;
 
         this.StateHasChanged();
     }
@@ -90,12 +117,14 @@
                 Id = gameId,
                 UserId = User,
                 Score = 0,
-                Clicks = 0
+                Clicks = 0,
+                Achievements = new List<string>()
             };
         await gameService.CreateGame(game);
 
         GameId = gameId;
         CurrentScore = 0;
+        Achievement = "";
 
         this.StateHasChanged();
     }

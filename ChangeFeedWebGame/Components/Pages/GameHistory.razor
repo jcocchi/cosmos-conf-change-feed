@@ -36,6 +36,7 @@
                 <th>Game Id</th>
                 <th>Score</th>
                 <th>Clicks</th>
+                <th>Achievements</th>
                 <th>Delete</th>
             </tr>
         </thead>
@@ -46,6 +47,11 @@
                     <td>@game.Id</td>
                     <td>@game.Score</td>
                     <td>@game.Clicks</td>
+                    <td>@foreach(var achievement in @game.Achievements)
+                        {
+                            <p>@achievement</p>
+                        }
+                    </td>
                     <td><button class="btn btn-primary" @onclick="(() => DeleteGame(game))">Delete</button></td>
                 </tr>
             }

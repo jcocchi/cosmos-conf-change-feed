@@ -90,16 +90,17 @@ namespace ChangeFeedWebGame
             return output;
         }
 
-        public async Task<int> UpdateScore(Game game)
+        public async Task<int> UpdateScore(Game game, int incrementScore, string achievement)
         {
-            Random random = new Random();
-            int randomScore = random.Next(1, 24);
-
-            IReadOnlyList<PatchOperation> operations = new List<PatchOperation>() 
+            List<PatchOperation> operations = new List<PatchOperation>() 
             { 
-                PatchOperation.Increment("/score", randomScore),
-                PatchOperation.Increment("/clicks", 1)
+                PatchOperation.Increment("/score", incrementScore),
+                PatchOperation.Increment("/clicks", 1),
             };
+            if (achievement != "")
+            {
+                operations.Add(PatchOperation.Add("/achievements/0",  achievement));
+            }
             Game updatedGame = await games.PatchItemAsync<Game>(game.Id, new PartitionKey(game.UserId), operations);
 
             return updatedGame.Score;
