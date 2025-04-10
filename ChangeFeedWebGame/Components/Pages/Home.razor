@@ -44,7 +44,7 @@
     private string GameId = "";
     private int CurrentScore = 0;
 
-    private List<string> DummyUsers = new List<string> { "Justine", "Andrew", "Jay", "Kirill" };
+    private List<string> DummyUsers = new List<string> { "Andrew", "Kirill", "Jay", "Marko", "Patty", "Justine" };
 
 
     protected override async Task OnInitializedAsync()
@@ -62,8 +62,16 @@
         await OnUserChanged.InvokeAsync(User);
 
         var game = await gameService.GetMostRecentGame(User);
-        GameId = game.Id;
-        CurrentScore = game.Score;
+
+        if (game != null)
+        {
+            GameId = game.Id;
+            CurrentScore = game.Score;
+        }
+        else
+        {
+            CreateNewGame();
+        }
     }
 
     private async void IncrementCount()
