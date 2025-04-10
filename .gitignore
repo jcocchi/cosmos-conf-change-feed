@@ -55,4 +55,5 @@ nunit-*.xml
 
 .vs
 *.user
-appsettings.json
+appsettings.Development.json
+__pycache__
